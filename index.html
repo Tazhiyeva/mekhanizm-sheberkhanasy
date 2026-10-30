@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Қарапайым механизмдер: тұтқа, блок, көлбеу жазықтық, шығыр, сына. Интерактив зертхана мен ойын.">
+<meta name="description" content="Қарапайым механизмдер: иіндік, блоктар, көлбеу жазықтық, шығыр, сына. Интерактив зертхана мен ойын.">
 <title>Механизм шеберханасы</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -119,6 +119,13 @@ h1{margin:0;font:800 clamp(28px,4.4vw,44px)/1.05 var(--f-display);letter-spacing
 .rows dt{color:var(--muted);font-size:14px}
 .rows dd{margin:0;font:600 14px var(--f-mono);text-align:right;font-variant-numeric:tabular-nums}
 .bad{color:var(--bad)} .okc{color:var(--good)}
+.dirs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:4px}
+.dchip{padding:6px 11px;border-radius:9px;border:1.5px solid;font-weight:700;font-size:15px}
+.dchip small{display:block;font:500 11px var(--f-body);color:var(--muted)}
+.dchip.f{border-color:var(--force);color:var(--force)}
+.dchip.p{border-color:var(--load);color:var(--load)}
+.dirs .ar{color:var(--muted);font-size:18px}
+.dir p{margin:10px 0 0;font-size:15px}
 .rule{background:var(--soft);border-radius:12px;padding:14px 16px}
 .rule p{margin:4px 0 0;font-size:15px}
 .chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:14px}
@@ -179,7 +186,7 @@ h1{margin:0;font:800 clamp(28px,4.4vw,44px)/1.05 var(--f-display);letter-spacing
     <div>
       <p class="eyebrow">Физика · қарапайым механизмдер</p>
       <h1>Механизм шеберханасы</h1>
-      <p class="lead">Механизмді баптап, адамға жүкті көтертіп көр. Күші жетсе, ол күледі. Жетпесе, терлеп-тепшиді. Тым әлсіз тұтқа сынады, жіңішке жіп үзіледі.</p>
+      <p class="lead">Механизмді баптап, адамға жүкті көтертіп көр. Күші жетсе, ол күледі. Жетпесе, терлеп-тепшиді. Тым әлсіз иіндік сынады, жіңішке жіп үзіледі.</p>
     </div>
     <nav class="modes" aria-label="Бөлім">
       <button type="button" data-mode="lab" class="on">Зертхана</button>
@@ -315,6 +322,22 @@ function tangentPt(ax, ay, cx, cy, r, pick) {
   const b = Math.atan2(dy, dx), d = Math.acos(r / D);
   return pick({x: cx + r * Math.cos(b + d), y: cy + r * Math.sin(b + d)}, {x: cx + r * Math.cos(b - d), y: cy + r * Math.sin(b - d)});
 }
+function arrow(ctx, x1, y1, x2, y2, col, w = 4, dash = false) {
+  const len = Math.hypot(x2 - x1, y2 - y1); if (len < 2) return;
+  const a = Math.atan2(y2 - y1, x2 - x1), hl = Math.min(14, len * .5);
+  ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = w; ctx.lineCap = 'round';
+  if (dash) ctx.setLineDash([6, 6]);
+  line(ctx, x1, y1, x2 - Math.cos(a) * hl * .8, y2 - Math.sin(a) * hl * .8); ctx.setLineDash([]);
+  ctx.beginPath(); ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - hl * Math.cos(a - .45), y2 - hl * Math.sin(a - .45)); ctx.lineTo(x2 - hl * Math.cos(a + .45), y2 - hl * Math.sin(a + .45));
+  ctx.closePath(); ctx.fill();
+}
+function dirArrow(ctx, x1, y1, x2, y2, col, label, side = 'left', dash = false) {
+  arrow(ctx, x1, y1, x2, y2, col, 4.5, dash);
+  const lx = side === 'left' ? Math.min(x1, x2) - 8 : Math.max(x1, x2) + 8;
+  text(ctx, label, lx, (y1 + y2) / 2, {size: 14, weight: 700, col, align: side === 'left' ? 'right' : 'left', bg: true});
+}
+const nOf = p => p.kind === 'fixed' ? 1 : p.kind === 'moving' ? 2 : p.n;
 const fallPx = (px0, t) => Math.max(0, px0 - 900 * t * t);
 
 /* ---------- адам ---------- */
@@ -501,9 +524,9 @@ const ropeBear = (p, val, label = 'Арқанның керілуі') => {
 };
 const SIMS = {
   lever: {
-    title: 'Тұтқа',
+    title: 'Иіндік',
     params: {
-      kind: {type: 'seg', label: 'Тұтқа түрі', options: [['1', '1-текті'], ['2', '2-текті'], ['3', '3-текті']], def: '1'},
+      kind: {type: 'seg', label: 'Иіндік түрі', options: [['1', '1-текті'], ['2', '2-текті'], ['3', '3-текті']], def: '1'},
       mat: {type: 'seg', label: 'Материалы', def: 'board', options: Object.entries(MATS).map(([k, v]) => [k, v.name, v.M + ' Н·м'])},
       m: {label: 'Жүктің массасы', unit: 'кг', min: 5, max: 200, step: 5, def: 60},
       pos: {label: p => p.kind === '3' ? 'Күш иіні l₁' : 'Жүк иіні l₂', unit: 'м', min: .1, max: 1.9, step: .05, def: .5}
@@ -573,56 +596,105 @@ const SIMS = {
         const lp = at(loadT);
         loadBox(ctx, lp.x, lp.y - 7 + (loadT === tc ? sag : 0), bs, bs, num(p.m) + ' кг');
         if (p.kind !== '3') person(E, hands);
-        if (st.nums) {
-          text(ctx, 'P = ' + force(r.P), lp.x, lp.y - bs - 22, {size: 14, mono: true, col: C.load, bg: true});
-          text(ctx, 'F = ' + force(r.F), E.x, Math.max(18, gy - 175 * s), {size: 14, mono: true, col: C.force, bg: true});
-        }
+        const ax = E.x - 24;
+        if (p.kind === '1') dirArrow(ctx, ax, E.y - 66, ax, E.y - 14, C.force, 'F');
+        else dirArrow(ctx, ax, E.y - 8, ax, E.y - 60, C.force, 'F');
+        const ly = lp.y - 7 - bs + (loadT === tc ? sag : 0);
+        dirArrow(ctx, lp.x, ly - 6, lp.x, ly - 52, C.load, 'жүк', 'right');
+        if (st.nums) text(ctx, 'F = ' + force(r.F), E.x, Math.max(18, gy - 175 * s), {size: 14, mono: true, col: C.force, bg: true});
       }
       const dy1 = gy + 26, dy2 = gy + 50;
       if (p.kind === '1') { dimH(ctx, x0, px, dy1, 'l₂ = ' + dist(r.l2)); dimH(ctx, px, x0 + 2 * k, dy1, 'l₁ = ' + dist(r.l1)); }
       else if (p.kind === '2') { dimH(ctx, x0, x0 + r.l2 * k, dy1, 'l₂ = ' + dist(r.l2)); dimH(ctx, x0, x0 + 2 * k, dy2, 'l₁ = ' + dist(r.l1)); }
       else { dimH(ctx, x0, x0 + r.l1 * k, dy1, 'l₁ = ' + dist(r.l1)); dimH(ctx, x0, x0 + 2 * k, dy2, 'l₂ = ' + dist(r.l2)); }
     },
+    dir(p) {
+      return p.kind === '1' ? ['↓ төмен басады', '↑ жоғары көтеріледі', 'Бағыт керісінше өзгереді: иіндіктің бір ұшын төмен басқанда, екінші ұшы жоғары көтеріледі.']
+        : p.kind === '2' ? ['↑ жоғары көтереді', '↑ жоғары көтеріледі', 'Бағыт өзгермейді: қол да, жүк те жоғары қозғалады. 2-текті иіндік тек күштен ұтыс береді.']
+        : ['↑ жоғары көтереді', '↑ жоғары көтеріледі', 'Бағыт өзгермейді. 3-текті иіндік күштен ұтыс бермейді, есесіне жүк қолдан алысқа әрі жылдам жылжиды.'];
+    },
     info(p) {
       const kinds = {
-        '1': '<p>1-текті тұтқада тірек жүк пен күштің арасында тұрады. Тіректі жүкке жақындатсаң, күш азаяды. Күнделікті мысалдары: қайшы, тербелмелі әткеншек, шеге суырғыш.</p>',
-        '2': '<p>2-текті тұтқада жүк тірек пен күштің арасында орналасады. Күш иіні әрдайым ұзын, сондықтан мұндай тұтқа үнемі күштен ұтыс береді. Мысалдары: қол арба, жаңғақ шаққыш.</p>',
-        '3': '<p>3-текті тұтқада күш тірек пен жүктің арасына түседі. Күштен ұтыламыз, бірақ жүк жағындағы ұшы алысқа әрі жылдам қозғалады. Мысалдары: адамның білегі, балық қармағы, пинцет.</p>'
+        '1': '<p>1-текті иіндікте тірек жүк пен күштің арасында тұрады. Тіректі жүкке жақындатсаң, күш азаяды. Күнделікті мысалдары: қайшы, тербелмелі әткеншек, шеге суырғыш.</p>',
+        '2': '<p>2-текті иіндікте жүк тірек пен күштің арасында орналасады. Күш иіні әрдайым ұзын, сондықтан мұндай иіндік үнемі күштен ұтыс береді. Мысалдары: қол арба, жаңғақ шаққыш.</p>',
+        '3': '<p>3-текті иіндікте күш тірек пен жүктің арасына түседі. Күштен ұтыламыз, бірақ жүк жағындағы ұшы алысқа әрі жылдам қозғалады. Мысалдары: адамның білегі, балық қармағы, пинцет.</p>'
       };
-      return `<h3>Қалай жұмыс істейді</h3><p>Тұтқа тірек нүктесін айнала бұрылады. Күш иіні жүк иінінен неше есе ұзын болса, жүкті сонша есе аз күшпен көтересің.</p><p class="formula">F·l₁ = P·l₂</p>${kinds[p.kind]}<p>Тұтқа шексіз берік емес. Оны иетін момент материалдың шегінен асса, сынып кетеді. Жіңішке шыбық тез сынады, темір сырық әлдеқайда төзімді.</p>`;
+      return `<h3>Қалай жұмыс істейді</h3><p>Иіндік тірек нүктесін айнала бұрылады. Күш иіні жүк иінінен неше есе ұзын болса, жүкті сонша есе аз күшпен көтересің.</p><p class="formula">F·l₁ = P·l₂</p>${kinds[p.kind]}<p>Иіндік шексіз берік емес. Оны иетін момент материалдың шегінен асса, сынып кетеді. Жіңішке шыбық тез сынады, темір сырық әлдеқайда төзімді.</p>`;
     }
   },
 
   pulleys: {
     title: 'Блоктар',
     params: {
-      m: {label: 'Жүктің массасы', unit: 'кг', min: 10, max: 300, step: 10, def: 80},
-      n: {label: 'Жүкті ұстайтын жіп бөліктері n', unit: '', min: 1, max: 6, step: 1, def: 3},
+      kind: {type: 'seg', label: 'Блок түрі', def: 'fixed', options: [['fixed', 'Жылжымайтын'], ['moving', 'Жылжымалы'], ['tackle', 'Полиспаст']]},
+      m: {label: 'Жүктің массасы', unit: 'кг', min: 10, max: 300, step: 5, def: 25},
+      n: {label: 'Жүкті ұстайтын жіп бөліктері n', unit: '', min: 2, max: 6, step: 1, def: 4, show: p => p.kind === 'tackle'},
       rope: ropeParam(),
       eff: effParam()
     },
     compute(p) {
-      const P = p.m * g, eta = p.eff / 100, F = P / (p.n * eta);
-      return {P, F, h: 1, s: p.n, k: p.n, goal: .6, tempo: 1, back: 5, verb: 'Тарт',
-        hLabel: 'Жүктің жолы h', sLabel: 'Тартылған жіп s', move: `жүк 1 м көтерілгенде, жіпті ${dist(p.n)} тартады`,
+      const n = nOf(p), P = p.m * g, eta = p.eff / 100, F = P / (n * eta);
+      return {P, F, h: 1, s: n, k: n, goal: .6, tempo: 1, back: 5, verb: 'Тарт',
+        hLabel: 'Жүктің жолы h', sLabel: 'Тартылған жіп s', move: `жүк 1 м көтерілгенде, жіпті ${dist(n)} тартады`,
         bear: ropeBear(p, F, 'Арқанның керілуі'),
-        extra: [['Әр жіп бөлігіне түсетін салмақ', force(P / p.n)]]};
+        extra: n > 1 ? [['Әр жіп бөлігіне түсетін салмақ', force(P / n)]] : []};
+    },
+    dir(p) {
+      return {
+        fixed: ['↓ төмен тартады', '↑ жоғары көтеріледі', 'Жылжымайтын блок күшті азайтпайды, тек оның бағытын керісінше өзгертеді: арқанды төмен тартсаң, жүк жоғары көтеріледі. Төмен тарту ыңғайлы, өйткені адам өз салмағын да пайдаланады.'],
+        moving: ['↑ жоғары тартады', '↑ жоғары көтеріледі', 'Жылжымалы блок күштің бағытын өзгертпейді: қол да, жүк те жоғары қозғалады. Есесіне ол күштен екі есе ұтыс береді.'],
+        tackle: ['↓ төмен тартады', '↑ жоғары көтеріледі', 'Жылжымалы блоктар күшті азайтады, ал ең жоғарғы жылжымайтын блок арқанды төмен қарай бұрады. Сондықтан төмен тартасың, жүк жоғары көтеріледі.']
+      }[p.kind];
     },
     draw(ctx, W, H, p, st) {
       gridBg(ctx, W, H);
-      const r = this.compute(p), who = st.who, s = who.s, n = p.n;
-      const floorY = H - 30, d = Math.min(44, (W - 240) / (n + 1)), topY = 100, bs = 34 + Math.sqrt(p.m) * 2.2;
-      const x0 = Math.max(80, W / 2 - n * d / 2 - 40);
+      const r = this.compute(p), who = st.who, s = who.s, n = nOf(p);
+      const floorY = H - 30, topY = 100, bs = 34 + Math.sqrt(p.m) * 2.2;
+      const grip = st.hold && !st.gaveUp && !st.broken;
+      ground(ctx, 16, W - 16, floorY);
+      if (p.kind === 'moving') {
+        const d = 44, x0 = Math.max(96, W / 2 - 110), X = i => x0 + i * d, rad = d / 2, ceilY = topY - 46, bY = Math.max(topY + 70, floorY - 200);
+        const pxm = Math.min(150, (floorY - bs - 12 - rad - (bY + 40)) / r.goal);
+        const rise = st.broken ? fallPx(st.broken.x * pxm, st.broken.t) : st.x * pxm;
+        const yb = floorY - rise - bs - 12 - rad, ropePx = st.phase * pxm, pc = X(0) + rad, hookY = yb + rad + 12;
+        ctx.fillStyle = C.soft; ctx.fillRect(X(0) - 34, ceilY - 14, 68, 14);
+        ctx.strokeStyle = C.ink; ctx.lineWidth = 2.5; line(ctx, X(0) - 34, ceilY, X(0) + 34, ceilY);
+        const bx1 = X(1) + 10, bx2 = W - 16;
+        ctx.strokeStyle = C.steel; ctx.lineWidth = 6; line(ctx, bx1 + 12, bY + 10, bx1 + 12, floorY); line(ctx, bx2 - 12, bY + 10, bx2 - 12, floorY);
+        rr(ctx, bx1, bY, bx2 - bx1, 10, 2); ctx.fillStyle = C.line; ctx.fill(); ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke();
+        ctx.strokeStyle = C.steel; ctx.lineWidth = 3; line(ctx, pc, yb, pc, hookY);
+        pulley(ctx, pc, yb, rad - 2, -ropePx / rad / 2);
+        const c = 40 * s, bot = bY - 16 * s, u = ((ropePx / (2 * c)) % 1 + 1) % 1;
+        const hy = v => v < .5 ? bot - (v / .5) * c : bot - c + ((v - .5) / .5) * c;
+        const h1 = {x: X(1) + (u < .5 ? 0 : 6), y: hy(u)}, h2 = {x: X(1) + (((u + .5) % 1) < .5 ? 0 : 6), y: hy((u + .5) % 1)};
+        const topHand = grip ? Math.min(h1.y, h2.y) : bot - c * .6;
+        ropeStyle(ctx, p.rope);
+        ctx.beginPath(); ctx.moveTo(X(1), yb); ctx.arc(pc, yb, rad, 0, Math.PI); ctx.stroke();
+        if (!st.broken) {
+          line(ctx, X(0), ceilY, X(0), yb); line(ctx, X(1), yb, X(1), topHand);
+          ctx.beginPath(); ctx.moveTo(X(1), topHand); ctx.quadraticCurveTo(X(1) + 2, topHand - 20, X(1) + 18, bY - 3); ctx.stroke();
+        } else {
+          line(ctx, X(0), ceilY, X(0), ceilY + 24); line(ctx, X(0), yb - 20, X(0), yb); line(ctx, X(1), yb - 20, X(1), yb); line(ctx, X(1), bot - c, X(1), bot + 22);
+        }
+        const coils = Math.min(6, 1 + Math.floor(ropePx / 40));
+        for (let i = 0; i < coils; i++) { ctx.beginPath(); ctx.ellipse(X(1) + 26, bY - 4 - i * 2.2, 14 - i, 3.5, 0, 0, 7); ctx.stroke(); }
+        loadBox(ctx, pc, hookY + bs, bs, bs, num(p.m) + ' кг');
+        drawPerson(ctx, {x: X(1) + 34 * s, y: bY, face: -1, hands: grip ? [h1, h2] : null, ...fx(st)});
+        dirArrow(ctx, X(1) - 18, bot + 10, X(1) - 18, bot - 44, C.force, 'F');
+        dirArrow(ctx, pc - bs / 2 - 16, hookY + bs * .85, pc - bs / 2 - 16, hookY + bs * .85 - 50, C.load, 'жүк');
+        text(ctx, 'Жылжымалы блок', X(0) - 34, ceilY - 30, {size: 15, align: 'left', bg: true});
+        if (st.nums) text(ctx, 'F = ' + force(r.F), X(1) + 34 * s, Math.max(16, bY - 165 * s), {size: 14, mono: true, col: C.force, bg: true});
+        return;
+      }
+      const d = Math.min(44, (W - 240) / (n + 1)), x0 = Math.max(90, W / 2 - n * d / 2 - 40);
       const maxRise = floorY - bs - 12 - (n >= 2 ? d / 2 : 0) - (topY + d / 2 + 34);
       const pxm = Math.min(170, maxRise / r.goal);
       const rise = st.broken ? fallPx(st.broken.x * pxm, st.broken.t) : st.x * pxm;
-      ground(ctx, 16, W - 16, floorY);
       const ropePx = st.phase * pxm;
       const T = drawTackle(ctx, {n, x0, topY, d, loadBottom: floorY - rise, boxW: bs, boxH: bs, boxLabel: num(p.m) + ' кг', rope: p.rope, cut: !!st.broken, spin: ropePx / (d / 2)});
       const rx = T.X(n), shY = floorY - 112 * s, c = 42 * s, top = shY - 34 * s;
       const u = ((ropePx / (2 * c)) % 1 + 1) % 1;
       const hy = v => v < .5 ? top + (v / .5) * c : top + c - ((v - .5) / .5) * c;
-      const grip = st.hold && !st.gaveUp && !st.broken;
       const h1 = {x: rx + (u < .5 ? 0 : 6), y: hy(u)}, h2 = {x: rx + (((u + .5) % 1) < .5 ? 0 : 6), y: hy((u + .5) % 1)};
       const lowY = Math.max(h1.y, h2.y);
       ropeStyle(ctx, p.rope);
@@ -632,20 +704,19 @@ const SIMS = {
       for (let i = 0; i < coils; i++) { ctx.beginPath(); ctx.ellipse(rx - 12, floorY - 4 - i * 2.2, 16 - i, 4, 0, 0, 7); ctx.stroke(); }
       ctx.strokeStyle = C.ink; ctx.lineWidth = 1.2;
       if (!st.broken) for (let yy = topY + 14 + (ropePx % 22); yy < Math.min(lowY, floorY - 20); yy += 22) line(ctx, rx - 3, yy, rx + 3, yy);
-      drawPerson(ctx, {x: rx + 28 * s, y: floorY, face: -1, hands: grip ? [h1, h2] : (st.broken ? null : null), ...fx(st)});
-      text(ctx, n === 1 ? 'Қозғалмайтын блок' : n === 2 ? 'Қозғалмалы блок' : `Полиспаст: ${n} жіп бөлігі`, T.cx1, T.ceilY - 30, {size: 15, align: 'left', bg: true});
-      if (st.nums) {
-        text(ctx, 'P = ' + force(r.P), T.bc - bs / 2 - 10, T.hookY + bs / 2, {size: 14, mono: true, col: C.load, align: 'right', bg: true});
-        text(ctx, 'F = ' + force(r.F), rx + 28 * s, Math.max(18, floorY - 180 * s), {size: 14, mono: true, col: C.force, bg: true});
-      }
+      drawPerson(ctx, {x: rx + 28 * s, y: floorY, face: -1, hands: grip ? [h1, h2] : null, ...fx(st)});
+      dirArrow(ctx, rx - 18, top - 6, rx - 18, top + 46, C.force, 'F');
+      dirArrow(ctx, T.bc - bs / 2 - 16, T.hookY + bs * .85, T.bc - bs / 2 - 16, T.hookY + bs * .85 - 50, C.load, 'жүк');
+      text(ctx, n === 1 ? 'Жылжымайтын блок' : `Полиспаст: ${n} жіп бөлігі`, T.cx1, T.ceilY - 30, {size: 15, align: 'left', bg: true});
+      if (st.nums) text(ctx, 'F = ' + force(r.F), rx + 28 * s, Math.max(18, floorY - 180 * s), {size: 14, mono: true, col: C.force, bg: true});
     },
     info(p) {
-      const t = p.n === 1
-        ? '<p>Қозғалмайтын блоктың осі бір орнында тұрады. Ол күштен ұтыс бермейді, тек тарту бағытын ауыстырады: жүкті жоғары көтеру үшін арқанды төмен тартасың, бұл әлдеқайда ыңғайлы.</p>'
-        : p.n === 2
-          ? '<p>Төменгі блок жүкпен бірге көтеріледі. Жүкті екі жіп бөлігі ұстап тұрғандықтан, әрқайсысына салмақтың жартысы ғана түседі. Есесіне жіпті екі есе көп тартасың.</p>'
-          : '<p>Полиспаст бірнеше блоктан құралады. Жүкті n жіп бөлігі ұстаса, салмақ солардың арасында бөлінеді. Құрылыс крандары мен желкенді кемелердің арқан жүйесі осылай жұмыс істейді.</p>';
-      return `<h3>Қалай жұмыс істейді</h3>${t}<p class="formula">F = P / (n·ПӘК),  s = n·h</p><p>Блок қоссаң, адамға жеңілдейді, қолы да тез қозғалады. Бірақ жіпті n есе көп тартатындықтан, жүк тезірек көтерілмейді. Адам тартқан арқанға F күші түседі. Ол арқанның шегінен асса, арқан үзіледі.</p>`;
+      const t = {
+        fixed: '<p>Жылжымайтын блоктың осі төбеге бекітулі, ол жүкпен бірге қозғалмайды. Мұндай блок күштен ұтыс бермейді, тек күштің бағытын өзгертеді.</p><p class="formula">F = P / ПӘК,  s = h</p>',
+        moving: '<p>Жылжымалы блок жүкпен бірге көтеріледі. Арқанның бір ұшы төбеге бекітулі, екінші ұшын адам жоғары тартады. Жүкті екі жіп бөлігі ұстап тұрғандықтан, әрқайсысына салмақтың жартысы түседі. Есесіне арқанды екі есе көп тартасың.</p><p class="formula">F = P / (2·ПӘК),  s = 2h</p>',
+        tackle: '<p>Полиспаст жылжымалы және жылжымайтын блоктардан құралады. Жылжымалы блоктар күшті азайтады, жылжымайтын блоктар арқанды ыңғайлы жаққа бұрады. Жүкті n жіп бөлігі ұстаса, салмақ солардың арасында бөлінеді. Құрылыс крандары мен желкенді кемелер осылай жұмыс істейді.</p><p class="formula">F = P / (n·ПӘК),  s = n·h</p>'
+      }[p.kind];
+      return `<h3>Қалай жұмыс істейді</h3>${t}<p>Адам тартқан арқанға F күші түседі. Ол арқанның шегінен асса, арқан үзіледі.</p>`;
     }
   },
 
@@ -674,8 +745,14 @@ const SIMS = {
       const foot = G.along(G.dpos - 30 * s), hp = G.toW(-1, -G.bs * .45);
       const push = st.hold && !st.gaveUp;
       drawPerson(ctx, {x: foot.x, y: foot.y, face: 1, lean: push ? 10 : 0, hands: push ? [hp, {x: hp.x - 2, y: hp.y + 9}] : null, ...fx(st)});
+      const fa = G.toW(G.bs + 8, -G.bs / 2), fb = G.toW(G.bs + 64, -G.bs / 2);
+      arrow(ctx, fa.x, fa.y, fb.x, fb.y, C.force, 4.5);
+      text(ctx, 'F', fb.x + 4, fb.y - 16, {size: 14, weight: 700, col: C.force, bg: true});
+      const tc = G.toW(G.bs / 2, -G.bs - 6);
+      dirArrow(ctx, tc.x, tc.y, tc.x, tc.y - 50, C.muted, 'тік көтерсек', 'left', true);
       if (st.nums) text(ctx, 'F = ' + force(r.F), foot.x, Math.max(18, foot.y - 175 * s), {size: 14, mono: true, col: C.force, bg: true});
     },
+    dir() { return ['↗ еңіс бойымен итереді', '↗ еңіспен биіктікке шығады', 'Жүкті тік жоғары көтермейміз, еңіс бойымен итереміз. Күш көлбеу бағытталғандықтан, ол аз болады, бірақ жол ұзарады. Сызбадағы үзік сызық жүкті тік көтергенде керек бағытты көрсетеді.']; },
     info() {
       return `<h3>Қалай жұмыс істейді</h3><p>Жүкті тік көтермей, еңіс жолмен біртіндеп шығарамыз. Жол неше есе ұзын болса, үйкеліс жоқ кезде күш сонша есе азаяды. Үйкеліс бар болса, күштің бір бөлігі соны жеңуге жұмсалады.</p><p class="formula">F = P·(sin α + μ·cos α)</p><p>Итеруді тоқтатсаң не болады? Егер tg α ≤ μ болса, үйкеліс жүкті орнында ұстап тұрады. Әйтпесе жүк сырғып кері түседі. Тақтайды тік қойып, батырманы жіберіп көр.</p>`;
     }
@@ -719,15 +796,16 @@ const SIMS = {
       ctx.beginPath(); ctx.moveTo(bx - bw / 2, bTop); ctx.lineTo(bx + bw / 2, bTop); ctx.lineTo(bx + bw / 2 - 6, bTop + 44); ctx.lineTo(bx - bw / 2 + 6, bTop + 44); ctx.closePath();
       ctx.fillStyle = C.load; ctx.fill(); ctx.stroke();
       text(ctx, num(p.m) + ' кг', bx, bTop + 22, {col: C.card, size: 12, mono: true});
-      drawCrank(ctx, cx, cy, Rpx, phi);
+      const K = drawCrank(ctx, cx, cy, Rpx, phi), tx = Math.sin(phi), ty = -Math.cos(phi);
+      arrow(ctx, K.x + tx * 8, K.y + ty * 8, K.x + tx * 50, K.y + ty * 50, C.force, 4.5);
+      text(ctx, 'F', K.x + tx * 50 + 10, K.y + ty * 50, {size: 14, weight: 700, col: C.force, bg: true});
+      dirArrow(ctx, bx + 36, bTop + 40, bx + 36, bTop - 10, C.load, 'жүк', 'right');
       text(ctx, 'R = ' + dist(p.R), cx + Rpx + 12, cy - Rpx - 4, {size: 13, mono: true, align: 'left', bg: true});
-      if (st.nums) {
-        text(ctx, 'F = ' + force(r.F), cx - 22 * s, Math.max(18, gy - 178 * s), {size: 14, mono: true, col: C.force, bg: true});
-        text(ctx, 'P = ' + force(r.P), bx + 34, bTop + 22, {size: 14, mono: true, col: C.load, align: 'left', bg: true});
-      }
+      if (st.nums) text(ctx, 'F = ' + force(r.F), cx - 22 * s, Math.max(18, gy - 178 * s), {size: 14, mono: true, col: C.force, bg: true});
     },
+    dir() { return ['↻ шеңбер бойымен айналдырады', '↑ жоғары көтеріледі', 'Шығыр айналмалы қозғалысты арқанның түзу қозғалысына айналдырады: қол шеңбер сызады, ал шелек тік жоғары көтеріледі.']; },
     info() {
-      return `<h3>Қалай жұмыс істейді</h3><p>Шығыр бірге айналатын білік пен тұтқадан тұрады. Оны тоқтаусыз айнала беретін тұтқа деп елестетуге болады: тірегі біліктің осі, иіндері R мен r. Тұтқа үлкен шеңбер сызады, ал білікке оралатын арқан аз жүреді.</p><p class="formula">F = P·r / (R·ПӘК)</p><p>Бұл шығырда тежегіш жоқ. Тұтқаны жіберсең, шелек құдыққа кері құлайды. Арқанға шелектің бүкіл салмағы түседі, сондықтан жіңішке жіп оған шыдамауы мүмкін.</p>`;
+      return `<h3>Қалай жұмыс істейді</h3><p>Шығыр бірге айналатын білік пен тұтқадан тұрады. Оны тоқтаусыз айнала беретін иіндік деп елестетуге болады: тірегі біліктің осі, иіндері R мен r. Тұтқа үлкен шеңбер сызады, ал білікке оралатын арқан аз жүреді.</p><p class="formula">F = P·r / (R·ПӘК)</p><p>Бұл шығырда тежегіш жоқ. Тұтқаны жіберсең, шелек құдыққа кері құлайды. Арқанға шелектің бүкіл салмағы түседі, сондықтан жіңішке жіп оған шыдамауы мүмкін.</p>`;
     }
   },
 
@@ -795,10 +873,18 @@ const SIMS = {
         for (let i = 0; i < 6; i++) { const aa = -Math.PI / 2 + (i - 2.5) * .45; line(ctx, Tg.x + Math.cos(aa) * 16, Tg.y - 4 + Math.sin(aa) * 16, Tg.x + Math.cos(aa) * 30, Tg.y - 4 + Math.sin(aa) * 30); }
       }
       dimV(ctx, cx + halfW + 20, back, tipY, 'L = ' + num(p.L) + ' см', 'right');
-      text(ctx, 'b = ' + num(p.b, 1) + ' см', cx + bp / 2 + 10, back - 14, {size: 13, mono: true, align: 'left', bg: true});
+      text(ctx, 'b = ' + num(p.b, 1) + ' см', cx + bp / 2 + 34, back + 12, {size: 13, mono: true, align: 'left', bg: true});
+      if (!st.broken && !(st.done && open > .5)) {
+        dirArrow(ctx, cx + bp / 2 + 22, back - 60, cx + bp / 2 + 22, back - 8, C.force, 'F', 'right');
+        const ay = logTop + 28;
+        arrow(ctx, cx - gap / 2 - 10, ay, cx - gap / 2 - 52, ay, C.load, 4.5);
+        arrow(ctx, cx + gap / 2 + 10, ay, cx + gap / 2 + 52, ay, C.load, 4.5);
+        text(ctx, 'ажырайды', cx, ay + 26, {size: 13, weight: 700, col: C.load, bg: true});
+      }
       text(ctx, `Соққы: ${st.hits}`, 20, 26, {size: 14, mono: true, align: 'left', bg: true});
       if (st.nums) text(ctx, 'Q = ' + force(r.P), cx, logBot - 22, {size: 14, mono: true, col: C.load, bg: true});
     },
+    dir() { return ['↓ төмен ұрады', '← → екі жаққа ажырайды', 'Сына күштің бағытын бұрады: балғамен төмен ұрсаң, ол бөренені екі жаққа итереді әрі күшті көбейтіп береді.']; },
     info() {
       return `<h3>Қалай жұмыс істейді</h3><p>Сына қозғалатын көлбеу жазықтыққа ұқсайды. Оны L тереңдікке қақсаң, бөрене b-ға ашылады. Ұзын әрі жіңішке сына аз күшпен кіреді.</p><p class="formula">F = Q·b / (L·ПӘК)</p><p>Балғаның әр соққысы белгілі бір энергия береді. Бөренені жаруға A = Q·b / ПӘК жұмыс керек, сондықтан соққы саны N = Q·b / (E·ПӘК). Ол сынаның ұзындығына байланысты емес, тек жуандығына байланысты. Адам ${HITS} соққыдан кейін шаршайды.</p><p>Ағаш бөренені ажыратқанда сынаны да сол күшпен қысады. Ағаш сына мен жіңішке сына бұған шыдамай сынуы мүмкін.</p>`;
     }
@@ -841,7 +927,7 @@ const SIMS = {
       const r = this.compute(p), who = st.who, s = who.s, kw = 110, Rpx = p.R * kw, rpx = Math.max(5, p.r * kw);
       const xNow = st.broken ? st.broken.x : st.x;
       if (p.variant === 'A') {
-        const n = p.n, d = 40, x0 = 62, topY = 104, floorY = H - 30, bs = Math.min(70, 30 + Math.sqrt(p.m) * 1.4);
+        const n = p.n, d = 40, x0 = 96, topY = 104, floorY = H - 30, bs = Math.min(70, 30 + Math.sqrt(p.m) * 1.4);
         const maxRise = floorY - bs - 12 - (n >= 2 ? d / 2 : 0) - (topY + d / 2 + 34), pxm = Math.min(170, maxRise / r.goal);
         const rise = st.broken ? fallPx(st.broken.x * pxm, st.broken.t) : st.x * pxm;
         ground(ctx, 16, W - 16, floorY);
@@ -854,7 +940,9 @@ const SIMS = {
         ropeStyle(ctx, p.rope);
         if (st.broken) { line(ctx, T.X(n), topY, T.X(n), topY + 24); line(ctx, tp.x, tp.y, lerp(tp.x, T.X(n), .15), lerp(tp.y, topY, .15)); }
         else line(ctx, T.X(n), topY, tp.x, tp.y);
-        drawCrank(ctx, wcx, wcy, Rpx, phi);
+        const K = drawCrank(ctx, wcx, wcy, Rpx, phi);
+        arrow(ctx, K.x + Math.sin(phi) * 8, K.y - Math.cos(phi) * 8, K.x + Math.sin(phi) * 48, K.y - Math.cos(phi) * 48, C.force, 4.5);
+        dirArrow(ctx, T.bc - bs / 2 - 16, T.hookY + bs * .85, T.bc - bs / 2 - 16, T.hookY + bs * .85 - 50, C.load, 'жүк');
         text(ctx, `Полиспаст: ${n} жіп бөлігі`, T.cx1, T.ceilY - 30, {size: 15, align: 'left', bg: true});
         if (st.nums) text(ctx, 'F = ' + force(r.F), wcx, Math.max(18, floorY - 178 * s), {size: 14, mono: true, col: C.force, bg: true});
       } else {
@@ -867,9 +955,18 @@ const SIMS = {
         ropeStyle(ctx, p.rope);
         if (st.broken) line(ctx, tp.x, tp.y, lerp(tp.x, G.front.x, .2), lerp(tp.y, G.front.y, .2) + 10);
         else line(ctx, G.front.x, G.front.y, tp.x, tp.y);
-        drawCrank(ctx, wcx, wcy, Rpx, phi);
+        const K = drawCrank(ctx, wcx, wcy, Rpx, phi);
+        arrow(ctx, K.x + Math.sin(phi) * 8, K.y - Math.cos(phi) * 8, K.x + Math.sin(phi) * 48, K.y - Math.cos(phi) * 48, C.force, 4.5);
+        const la = G.toW(-6, -G.bs - 12), lb = G.toW(48, -G.bs - 12);
+        arrow(ctx, la.x, la.y, lb.x, lb.y, C.load, 4.5);
+        text(ctx, 'жүк', la.x - 8, la.y, {size: 14, weight: 700, col: C.load, align: 'right', bg: true});
         if (st.nums) text(ctx, 'F = ' + force(r.F), wcx + 22 * s, Math.max(18, G.yt - 178 * s), {size: 14, mono: true, col: C.force, bg: true});
       }
+    },
+    dir(p) {
+      return p.variant === 'A'
+        ? ['↻ тұтқаны айналдырады', '↑ жоғары көтеріледі', 'Шығыр айналуды арқанның тартуына айналдырады. Жоғарғы жылжымайтын блок арқанды жүкке қарай бұрады, ал жылжымалы блоктар күшті азайтады.']
+        : ['↻ тұтқаны айналдырады', '↗ еңіспен жоғары шығады', 'Шығыр айналуды арқанның тартуына айналдырады, ал арқан жүкті еңіс бойымен сүйрейді.'];
     },
     info(p) {
       const ex = p.variant === 'A'
@@ -892,9 +989,9 @@ function mechWhy(id, p, r) {
     case 'lever': return r.l1 >= r.l2
       ? `Күш иіні l₁ = ${dist(r.l1)}, ал жүк иіні l₂ = ${dist(r.l2)}. Күш иіні ${num(r.l1 / r.l2, 1)} есе ұзын, сондықтан күш те ${num(r.l1 / r.l2, 1)} есе азаяды: F = P·l₂ / l₁.`
       : `Күш иіні l₁ = ${dist(r.l1)} жүк иінінен (l₂ = ${dist(r.l2)}) ${num(r.l2 / r.l1, 1)} есе қысқа. Сондықтан күш жүктің салмағынан да ${num(r.l2 / r.l1, 1)} есе көп керек: F = P·l₂ / l₁.`;
-    case 'pulleys': return p.n === 1
-      ? 'Қозғалмайтын блок күшті азайтпайды, тек бағытын өзгертеді. Үйкеліс болса, күш тіпті сәл көбейеді.'
-      : `Жүкті ${p.n} жіп бөлігі ұстап тұр, салмақ солардың арасында бөлінеді. ${p.eff < 100 ? `Үйкелісті (ПӘК ${p.eff}%) қоса есептегенде күш` : 'Сондықтан күш'} ${num(gain, 1)} есе азаяды.`;
+    case 'pulleys': return p.kind === 'fixed'
+      ? 'Жылжымайтын блок күшті азайтпайды, тек бағытын өзгертеді. Үйкеліс болса, күш тіпті сәл көбейеді.'
+      : `${p.kind === 'moving' ? 'Жылжымалы блокта жүкті' : 'Жүкті'} ${nOf(p)} жіп бөлігі ұстап тұр, салмақ солардың арасында бөлінеді. ${p.eff < 100 ? `Үйкелісті (ПӘК ${p.eff}%) қоса есептегенде күш` : 'Сондықтан күш'} ${num(gain, 1)} есе азаяды.`;
     case 'ramp': { const {sin, cos} = slope(p);
       return `Жүкті тік көтермей, ұзындығы ${dist(p.L)} еңіспен шығарамыз. Салмақтың еңіс бойымен төмен тартатын бөлігі P·sin α = ${force(r.P * sin)}${p.mu > 0 ? `, оған үйкеліс күші ${force(p.mu * r.P * cos)} қосылады` : ''}.`; }
     case 'winch': return `Тұтқаның ұзындығы R = ${dist(p.R)} біліктің радиусынан (r = ${dist(p.r)}) ${num(p.R / p.r, 1)} есе үлкен, сондықтан күш ${num(p.R / p.r, 1)} есе азаяды${p.eff < 100 ? `, ал үйкеліс (ПӘК ${p.eff}%) оны сәл көбейтеді` : ''}.`;
@@ -905,8 +1002,9 @@ function mechWhy(id, p, r) {
 }
 function tipWeak(id, p) {
   switch (id) {
-    case 'lever': return p.kind === '3' ? '3-текті тұтқа күштен ұтыс бермейді. 1-текті не 2-текті тұтқаны таңда.' : 'Тіректі жүкке жақындат: жүк иіні қысқарып, күш иіні ұзарады.';
-    case 'pulleys': return 'Жіп бөліктерін көбейт: әр жаңа бөлік салмақтың бір үлесін өзіне алады.';
+    case 'lever': return p.kind === '3' ? '3-текті иіндік күштен ұтыс бермейді. 1-текті не 2-текті иіндікті таңда.' : 'Тіректі жүкке жақындат: жүк иіні қысқарып, күш иіні ұзарады.';
+    case 'pulleys': return p.kind === 'fixed' ? 'Жылжымайтын блок күштен ұтыс бермейді. Жылжымалы блокты не полиспасты таңда.'
+      : p.kind === 'moving' ? 'Полиспасты таңда: жіп бөліктері көбейген сайын күш азаяды.' : 'Жіп бөліктерін көбейт: әр жаңа бөлік салмақтың бір үлесін өзіне алады.';
     case 'ramp': return 'Тақтайды ұзарт, сонда еңіс жатық болады. Үйкеліс аз болса, тағы жеңілдейді.';
     case 'winch': return 'Тұтқаны ұзарт немесе білікті жіңішкерт: R/r қатынасы өскен сайын күш азаяды.';
     case 'combo': return p.variant === 'A' ? 'Тұтқаны ұзарт, білікті жіңішкерт немесе полиспасқа жіп бөлігін қос.' : 'Тұтқаны ұзарт, білікті жіңішкерт немесе еңісті ұзарт.';
@@ -943,9 +1041,9 @@ function explain(type, sim, p, r, who, st, lab) {
     if (id === 'lever') {
       const mat = MATS[p.mat];
       const where = {'1': ['тіректің үстінде', 'M = P·l₂'], '2': ['жүктің астында', 'M = P·l₂·(2 м − l₂) / 2 м'], '3': ['қол ұстаған жерде', 'M = P·(2 м − l₁)']}[p.kind];
-      return {tone: 'no', title: 'Неге тұтқа сынды?',
-        html: P(`Тұтқа ${where[0]} ең қатты иіледі. Сол жердегі иілу моменті ${where[1]} = ${fN(act)} Н·м болды, ал ${lc(mat.name)} ${mat.M} Н·м-ге ғана шыдайды.`) + pushed +
-          P('Иілу моменті күш пен иіннің көбейтіндісі. Жүк ауыр не иін ұзын болса, тұтқа көбірек иіледі.') +
+      return {tone: 'no', title: 'Неге иіндік сынды?',
+        html: P(`Иіндік ${where[0]} ең қатты иіледі. Сол жердегі иілу моменті ${where[1]} = ${fN(act)} Н·м болды, ал ${lc(mat.name)} ${mat.M} Н·м-ге ғана шыдайды.`) + pushed +
+          P('Иілу моменті күш пен иіннің көбейтіндісі. Жүк ауыр не иін ұзын болса, иіндік көбірек иіледі.') +
           tip(p.kind === '3' ? 'Берігірек материал ал немесе қолыңды жүкке жақындат.' : 'Берігірек материал ал немесе жүкті тірекке жақындат: иін қысқарса, момент те азаяды.')};
     }
     const R = ROPES[p.rope];
@@ -954,7 +1052,7 @@ function explain(type, sim, p, r, who, st, lab) {
     else if (id === 'winch') body = `Шығырда арқан шелектің бүкіл салмағын ұстайды: ${force(act)}. Ұзын тұтқа адамға жеңілдетеді, бірақ арқанға түсетін салмақты азайтпайды. ${R.name} ${force(R.T)}-ға ғана шыдайды.`;
     else if (p.variant === 'A') body = `Шығыр мен полиспастың арасындағы арқанға T = P / (n·ПӘК) = ${force(act)} күш түсті. Бұл адамның күшінен әлдеқайда көп, өйткені шығыр күшті күшейтіп береді. ${R.name} ${force(R.T)}-ға ғана шыдайды.`;
     else body = `Арқан жүкті еңіспен сүйреп тұр, оған T = P·(sin α + μ·cos α) = ${force(act)} күш түсті. ${R.name} ${force(R.T)}-ға ғана шыдайды.`;
-    const t = id === 'pulleys' ? 'Берігірек арқан ал немесе жіп бөліктерін көбейт: әр бөлікке түсетін салмақ азаяды.'
+    const t = id === 'pulleys' ? 'Берігірек арқан ал немесе жіп бөліктері көп блок жүйесін таңда: әр бөлікке түсетін салмақ азаяды.'
       : id === 'winch' ? 'Берігірек арқан ал. Тұтқаның ұзындығы мұнда көмектеспейді.'
       : p.variant === 'A' ? 'Берігірек арқан ал немесе полиспасқа жіп бөлігін қос: арқанға түсетін күш азаяды.'
       : 'Берігірек арқан ал немесе еңісті ұзарт: еңіс жатық болса, арқанға аз күш түседі.';
@@ -972,6 +1070,10 @@ function explain(type, sim, p, r, who, st, lab) {
         P(id === 'winch' || id === 'combo' ? 'Нағыз шығыр мен кранда осы үшін тежегіш тісті дөңгелек қояды: ол білікті тек бір жаққа айналдырады.' : 'Жүкті жоғарыда ұстап тұру үшін де күш керек, ол күш тоқтаса, жүк түседі.')};
   }
   return null;
+}
+function dirHTML(sim, p) {
+  const [h, l, note] = sim.dir(p);
+  return `<div class="card dir"><h3>Күштің бағыты</h3><div class="dirs"><span class="dchip f"><small>Адамның күші</small>${h}</span><span class="ar" aria-hidden="true">→</span><span class="dchip p"><small>Жүк</small>${l}</span></div><p>${note}</p></div>`;
 }
 const whyHTML = e => `<strong>${e.title}</strong>${e.html}`;
 
@@ -1193,7 +1295,7 @@ function ruleText(r) {
 }
 const chainHTML = ch => `<div class="chain" aria-label="Күштің жолы">${ch.map(([t, a, b], i) => `${i ? '<span class="ar">→</span>' : ''}<span class="n ${t}"><small>${a}</small>${b}</span>`).join('')}</div>`;
 const rowsHTML = rows => `<dl class="rows">${rows.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>`;
-function renderOut(box, r, who) {
+function renderOut(box, r, who, dirCard = '') {
   const Ap = r.P * r.h, At = r.F * r.s, [gc, gt] = gainText(r.P / r.F);
   const pr = [];
   if (r.hammer) {
@@ -1215,6 +1317,7 @@ function renderOut(box, r, who) {
       ${r.chain ? chainHTML(r.chain) : ''}
       ${rowsHTML([[r.hLabel, dist(r.h)], [r.sLabel, dist(r.s)], ['Пайдалы жұмыс A<sub>п</sub> = P·h', work(Ap)], ['Толық жұмыс A<sub>т</sub> = F·s', work(At)], ['ПӘК = A<sub>п</sub> / A<sub>т</sub>', num(Ap / At * 100, 0) + '%'], ...(r.extra || [])])}
     </div>
+    ${dirCard}
     <div class="card"><h3>${who.name} және беріктік</h3>${rowsHTML(pr)}</div>
     <div class="rule"><h3>Механиканың алтын ережесі</h3><p>${ruleText(r)}</p></div>`;
 }
@@ -1246,7 +1349,7 @@ function labUpdate(rebuild) {
   sim.fix && sim.fix(p, sim.params);
   if (rebuild) buildCtrls($('#labCtrls'), sim.params, Object.keys(sim.params), p, 'lab-' + labSim, (k, rb) => { labRig.reset(); hideWhy(); labUpdate(rb); });
   else syncCtrls($('#labCtrls'), sim.params, p);
-  renderOut($('#labOut'), sim.compute(p), PEOPLE[labWho]);
+  renderOut($('#labOut'), sim.compute(p), PEOPLE[labWho], dirHTML(sim, p));
   $('#labInfo').innerHTML = sim.info(p);
   saveLab();
 }
@@ -1263,22 +1366,22 @@ const LEVELS = [
     chips: [['Тас', '90 кг'], ['Сырық', '2 м, темір']],
     edit: {pos: {label: 'Тастан кірпішке дейін l₂'}}},
   {type: 'quiz', title: 'Балық қармағы',
-    q: 'Балық аулағанда қармақты бір қолыңмен шетінен ұстап, екінші қолыңмен ортасынан көтересің. Бұл 3-текті тұтқа. Мұндай тұтқа балықшыға не береді?',
+    q: 'Балық аулағанда қармақты бір қолыңмен шетінен ұстап, екінші қолыңмен ортасынан көтересің. Бұл 3-текті иіндік. Мұндай иіндік балықшыға не береді?',
     opts: ['Күштен ұтыс береді', 'Қармақтың ұшы алыс әрі жылдам қозғалады', 'Жұмысты азайтады', 'Ешқандай пайдасы жоқ'], a: 1,
     exp: 'Күш тірек пен жүктің арасына түседі, сондықтан күш көбірек жұмсалады. Есесіне қармақтың ұшы қолдан әлдеқайда ұзын жол жүреді, яғни жылдам қозғалады. Балықты лезде ілу үшін дәл осы керек.'},
   {type: 'task', title: 'Шыбық па, тақтай ма?', sim: 'lever', who: 'kid', p: {kind: '1', mat: 'twig', m: 60, pos: .8},
-    story: 'Кішкентай бала 60 кг жәшікті тұтқамен көтергісі келеді. Қолында жіңішке шыбық, ағаш тақтай және темір сырық бар, бәрінің ұзындығы 2 м. Неден тұтқа жасайды және тіректі қайда қояды?',
+    story: 'Кішкентай бала 60 кг жәшікті иіндікпен көтергісі келеді. Қолында жіңішке шыбық, ағаш тақтай және темір сырық бар, бәрінің ұзындығы 2 м. Неден иіндік жасайды және тіректі қайда қояды?',
     chips: [['Жәшік', '60 кг']],
     edit: {mat: {}, pos: {label: 'Жәшіктен тірекке дейін l₂'}}},
-  {type: 'task', title: 'Шатырға цемент', sim: 'pulleys', who: 'teen', p: {m: 100, n: 1, eff: 90, rope: 'thread'},
+  {type: 'task', title: 'Шатырға цемент', sim: 'pulleys', who: 'teen', p: {kind: 'fixed', m: 100, n: 2, eff: 90, rope: 'thread'},
     story: 'Оқушыға 100 кг цемент қапты 3 м биіктіктегі шатырға шығару керек. Қолда жіп, арқан және блоктар бар. Арқанның ұзындығы 16 м ғана. Блоктардың ПӘК-і 90%.',
     chips: [['Жүк', '100 кг'], ['Биіктік', '3 м'], ['Арқан ұзындығы', '16 м'], ['ПӘК', '90%']],
-    edit: {n: {}, rope: {}},
-    check: p => p.n * 3 > 16 ? `Жүкті 3 м көтеру үшін ${p.n * 3} м арқан тартылады, ал сенде 16 м ғана бар.` : null},
-  {type: 'quiz', title: 'Қозғалмайтын блок',
-    q: 'Құдықтың үстіне қозғалмайтын блок ілініп, арқан соның үстінен өтеді. 200 Н шелекті осы блокпен көтеріп тұрсың. Блок саған не береді?',
+    edit: {kind: {}, n: {}, rope: {}},
+    check: p => nOf(p) * 3 > 16 ? `Жүкті 3 м көтеру үшін ${nOf(p) * 3} м арқан тартылады, ал сенде 16 м ғана бар.` : null},
+  {type: 'quiz', title: 'Жылжымайтын блок',
+    q: 'Құдықтың үстіне жылжымайтын блок ілініп, арқан соның үстінен өтеді. 200 Н шелекті осы блокпен көтеріп тұрсың. Блок саған не береді?',
     opts: ['Күш екі есе азаяды', 'Тартатын арқан қысқарады', 'Тек күштің бағыты өзгереді', 'Жұмыс азаяды'], a: 2,
-    exp: 'Қозғалмайтын блоктың екі иіні тең, екеуі де блоктың радиусына тең. Сондықтан F = P. Ол тек бағытты өзгертеді: шелекті жоғары көтеру үшін арқанды төмен тартасың, ал төмен тарту әлдеқайда оңай.'},
+    exp: 'Жылжымайтын блоктың екі иіні тең, екеуі де блоктың радиусына тең. Сондықтан F = P. Ол тек бағытты өзгертеді: шелекті жоғары көтеру үшін арқанды төмен тартасың, ал төмен тарту әлдеқайда оңай.'},
   {type: 'task', title: 'Бөшкені көлікке тие', sim: 'ramp', who: 'adult', p: {m: 120, h: 1.2, mu: .1, L: 2},
     story: '120 кг бөшкені биіктігі 1,2 м жүк көлігіне тақтаймен итеріп шығару керек. Үйкеліс коэффициенті 0,1. Ауладағы ең ұзын тақтай 6 м. Ересек адам қандай тақтай алуы керек? Абайла: жолдың ортасында тоқтаса, бөшке кері сырғиды.',
     chips: [['Бөшке', '120 кг'], ['Биіктік', '1,2 м'], ['μ', '0,1']],
@@ -1375,7 +1478,7 @@ function openLevel(i) {
     return;
   }
   const sim = SIMS[L.sim], who = PEOPLE[L.who], p = {...defaults(L.sim), ...L.p};
-  const spec = {}; Object.keys(L.edit).forEach(k => spec[k] = {...sim.params[k], ...L.edit[k], show: null});
+  const spec = {}; Object.keys(L.edit).forEach(k => spec[k] = {...sim.params[k], ...L.edit[k]});
   box.innerHTML = `${levelTop(i)}<div class="bench">
     <div class="stage-col"><div class="stage" id="gameStage"></div><div id="gameBar"></div></div>
     <aside class="panel">
@@ -1384,6 +1487,7 @@ function openLevel(i) {
         <div class="chips">${L.chips.map(([a, b]) => `<span class="chip">${a}: <b>${b}</b></span>`).join('')}<span class="chip f">${who.name}: <b>${sim.hammer ? 'соққысы ' + who.E + ' Дж' : force(who.F)}</b></span></div>
       </div>
       <div class="card"><h3>Баптау</h3><div class="ctrls" id="lvlCtrls"></div></div>
+      <div id="lvlDir"></div>
       <div class="feedback" id="lvlFb" hidden></div>
     </aside></div>`;
   $('#lvlBack').addEventListener('click', closeLevel);
@@ -1407,8 +1511,10 @@ function openLevel(i) {
     if (sim.fix) sim.fix(p, {...sim.params, ...spec});
     if (rb) buildCtrls($('#lvlCtrls'), spec, Object.keys(spec), p, `lvl${i}`, onChange); else syncCtrls($('#lvlCtrls'), spec, p);
     gRig.reset(); if (!solved) $('#lvlFb').hidden = true;
+    $('#lvlDir').innerHTML = dirHTML(sim, p);
   };
   buildCtrls($('#lvlCtrls'), spec, Object.keys(spec), p, `lvl${i}`, onChange);
+  $('#lvlDir').innerHTML = dirHTML(sim, p);
   window.scrollTo({top: box.offsetTop - 10, behavior: reduced ? 'auto' : 'smooth'});
 }
 
